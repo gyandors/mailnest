@@ -12,6 +12,10 @@ const emailSlice = createSlice({
   initialState,
   reducers: {
     setSentMails(state, action) {
+      if (action.payload.initial) {
+        state.sentMails = action.payload.mailArray;
+        return;
+      }
       state.sentMails.push(action.payload);
     },
 

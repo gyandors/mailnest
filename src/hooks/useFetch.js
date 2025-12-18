@@ -1,13 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
 
-export function useFetch(url, init) {
-  const [data, setData] = useState(init);
+import { setSentMails, setReceivedMails } from "../reducers/emailSlice";
+
+export function useFetch(url) {
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    fetch(url)
-      .then((res) => res.json())
-      .then((data) => setData(data));
-  }, [url]);
+    async function fetchMails() {
+      const response = await fetch(url);
 
-  return [data];
+      const data = await response.json();
+
+      let unreadMails = 0;
+      const mailArray = [];
+      for (const key in data) {
+        if (data[key].read === false) unreadMails += 1;
+        mailArray.push({ id: key, mail: data[key] });
+      }
+
+      if (url.includes("receivedMails")) {
+        dispatch(setReceivedMails({ mailArray, unreadMails }));
+      }
+      if (url.includes("sentMails")) {
+        dispatch(setSentMails({ mailArray, initial: true }));
+      }
+    }
+
+    fetchMails();
+
+    let intervalId;
+    if (url.includes("receivedMails")) {
+      intervalId = setInterval(() => {
+        fetchMails();
+      }, 5000);
+    }
+
+    return () => clearInterval(intervalId);
+  }, [dispatch, url]);
 }

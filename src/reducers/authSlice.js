@@ -1,11 +1,11 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const authSlice = createSlice({
-  name: ' auth',
+  name: " auth",
   initialState: {
-    idToken: localStorage.getItem('idToken'),
-    loggedUser: JSON.parse(localStorage.getItem('loggedUser')),
-    isLoggedIn: !!localStorage.getItem('idToken'),
+    idToken: localStorage.getItem("idToken"),
+    loggedUser: JSON.parse(localStorage.getItem("loggedUser")),
+    isLoggedIn: !!localStorage.getItem("idToken"),
   },
   reducers: {
     onLogin(state, action) {
@@ -17,20 +17,20 @@ const authSlice = createSlice({
       };
 
       state.idToken = idToken;
-      localStorage.setItem('idToken', idToken);
+      localStorage.setItem("idToken", idToken);
 
       state.loggedUser = loggedUser;
-      localStorage.setItem('loggedUser', JSON.stringify(loggedUser));
+      localStorage.setItem("loggedUser", JSON.stringify(loggedUser));
 
       state.isLoggedIn = true;
     },
 
     onLogout(state) {
       state.idToken = null;
-      localStorage.removeItem('idToken');
+      localStorage.removeItem("idToken");
 
       state.loggedUser = null;
-      localStorage.removeItem('loggedUser');
+      localStorage.removeItem("loggedUser");
 
       state.isLoggedIn = false;
     },

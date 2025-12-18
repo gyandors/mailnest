@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.ql-container.ql-snow {
+  border: 0 !important;
+}
+
+.ql-container.ql-snow .ql-editor {
+  padding: 0;
+  margin: 1rem 0;
+  height: 10rem;
+  overflow: auto;
+}
+
+.ql-toolbar.ql-snow {
+  margin-top: 1rem;
+  border-radius: 1rem;
+}
