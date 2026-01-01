@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { onLogin } from "../../reducers/authSlice";
 import { toggleSpinner } from "../../reducers/uiSlice";
 import Spinner from "../ui/Spinner";
+import { apiKey, apiUrl } from "../../utils/constants";
 
 export default function LoginForm() {
   const emailRef = useRef();
@@ -28,7 +29,7 @@ export default function LoginForm() {
     dispatch(toggleSpinner(true));
     try {
       const response = await fetch(
-        "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBwgAJkZjV9L9mIKI7CySOf8mrvtrZ3rOQ",
+        `${apiUrl}signInWithPassword?key=${apiKey}`,
         {
           method: "POST",
           body: JSON.stringify({

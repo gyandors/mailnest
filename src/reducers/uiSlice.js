@@ -2,13 +2,17 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const uiSlice = createSlice({
   name: "ui",
-  initialState: { spinner: false },
+  initialState: { spinner: false, mailsLoading: true },
   reducers: {
     toggleSpinner(state, action) {
       state.spinner = action.payload;
     },
+
+    toggleMailsLoading(state, action) {
+      state.mailsLoading = action.payload;
+    },
   },
 });
 
-export const { toggleSpinner } = uiSlice.actions;
+export const { toggleSpinner, toggleMailsLoading } = uiSlice.actions;
 export default uiSlice.reducer;

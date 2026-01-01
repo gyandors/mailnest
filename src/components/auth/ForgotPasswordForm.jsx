@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 
 import { toggleSpinner } from "../../reducers/uiSlice";
 import Spinner from "../ui/Spinner";
+import { apiKey, apiUrl } from "../../utils/constants";
 
 export default function ForgotPasswordForm() {
   const emailRef = useRef();
@@ -16,16 +17,13 @@ export default function ForgotPasswordForm() {
     dispatch(toggleSpinner(true));
 
     try {
-      const response = await fetch(
-        "https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyBwgAJkZjV9L9mIKI7CySOf8mrvtrZ3rOQ",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            requestType: "PASSWORD_RESET",
-            email: emailRef.current.value,
-          }),
-        }
-      );
+      const response = await fetch(`${apiUrl}sendOobCode?key=${apiKey}`, {
+        method: "POST",
+        body: JSON.stringify({
+          requestType: "PASSWORD_RESET",
+          email: emailRef.current.value,
+        }),
+      });
       if (response.ok) {
         toast.success("Password reset link has been sent to your email");
       } else {

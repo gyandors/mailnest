@@ -1,126 +1,95 @@
-import { useParams, useNavigate, useLocation } from "react-router";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
-import { IoArrowBack, IoMailUnread } from "react-icons/io5";
-import { MdDelete } from "react-icons/md";
+import { toast } from "react-toastify";
+import { MdAccountCircle } from "react-icons/md";
 
-import {
-  deleteReceivedMails,
-  deleteSentMails,
-  markAsUnread,
-} from "../../reducers/emailSlice";
+import { dbUrl } from "../../utils/constants";
+import MailBodyHeader from "../../components/mail/MailBodyHeader";
+import { toggleMailsLoading } from "../../reducers/uiSlice";
+import MailsLoader from "../../components/ui/MailsLoader";
+import MailNotFound from "../error/MailNotFound";
 
 export default function MailBodyPage() {
   const { mailId } = useParams();
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [mail, setMail] = useState({});
 
-  const sentMails = useSelector((state) => state.email.sentMails);
-  const receivedMails = useSelector((state) => state.email.receivedMails);
   const { email } = useSelector((state) => state.auth.loggedUser);
+  const { mailsLoading } = useSelector((state) => state.ui);
 
-  const allMails = [...sentMails, ...receivedMails];
-  const selectedMail = allMails.find((m) => m.id === mailId);
+  const dispatch = useDispatch();
 
-  if (!selectedMail) {
-    return;
-  }
+  useEffect(() => {
+    async function fetchMail() {
+      dispatch(toggleMailsLoading(true));
 
-  async function handleDeleteMail() {
-    if (location.pathname.includes("inbox")) {
-      const response = await fetch(
-        `https://mail-box-c1237-default-rtdb.firebaseio.com/${email.replace(
-          ".",
-          ""
-        )}/receivedMails/${mailId}.json`,
-        {
-          method: "DELETE",
-        }
-      );
-      if (response.ok) {
-        dispatch(deleteReceivedMails(mailId));
-        navigate("/mail/inbox");
+      try {
+        const response = await fetch(
+          `${dbUrl}/${email.replace(".", "")}/${mailId}.json`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.error);
+
+        setMail(data);
+      } catch (error) {
+        toast.error(error.message);
       }
+
+      dispatch(toggleMailsLoading(false));
     }
 
-    if (location.pathname.includes("sent")) {
-      const response = await fetch(
-        `https://mail-box-c1237-default-rtdb.firebaseio.com/${email.replace(
-          ".",
-          ""
-        )}/sentMails/${mailId}.json`,
-        {
-          method: "DELETE",
-        }
-      );
-      if (response.ok) {
-        dispatch(deleteSentMails(mailId));
-        navigate("/mail/sent");
-      }
-    }
-  }
-
-  async function handleMarkAsUnread() {
-    if (selectedMail.mail.read === true) {
-      const response = await fetch(
-        `https://mail-box-c1237-default-rtdb.firebaseio.com/${email.replace(
-          ".",
-          ""
-        )}/receivedMails/${mailId}.json`,
-        {
-          method: "PUT",
-          body: JSON.stringify({ ...selectedMail.mail, read: false }),
-        }
-      );
-      if (response.ok) {
-        dispatch(markAsUnread(mailId));
-      }
-    }
-  }
+    fetchMail();
+  }, [dispatch, email, mailId]);
 
   return (
-    <div className="rounded overflow-hidden sm:w-auto sm:mx-2">
-      <header className="p-1 border-b flex justify-between items-center">
-        <button
-          className="rounded-full p-2 hover:bg-gray-100 active:bg-gray-200 duration-300"
-          title="Back"
-          onClick={() => navigate(-1)}
-        >
-          <IoArrowBack className="size-6" />
-        </button>
-        <div className="flex items-center">
-          {location.pathname.includes("inbox") && (
-            <button
-              className="rounded-full p-2 hover:bg-gray-100 active:bg-gray-200 duration-300"
-              title="Mark as unread"
-              onClick={handleMarkAsUnread}
-            >
-              <IoMailUnread className="size-6" />
-            </button>
-          )}
-          <button
-            className="rounded-full p-3 hover:bg-gray-100 active:bg-gray-200 duration-300"
-            title="Delete"
-            onClick={handleDeleteMail}
-          >
-            <MdDelete className="size-6" />
-          </button>
-        </div>
-      </header>
-      <section className="p-3">
-        <div className="mb-5 mt-2">
-          <h1 className="text-xl font-medium">{selectedMail.mail.subject}</h1>
-          <p className="text-sm text-slate-700">
-            {location.pathname.includes("inbox")
-              ? `<${selectedMail.mail.from}>`
-              : `<${selectedMail.mail.to}>`}
-          </p>
-        </div>
-        <div
-          dangerouslySetInnerHTML={{ __html: selectedMail.mail.content }}
-        ></div>
-      </section>
+    <div className="sm:py-2 sm:mx-2">
+      {mailsLoading ? (
+        <MailsLoader />
+      ) : mail ? (
+        <>
+          <MailBodyHeader id={mailId} mail={mail} setMail={setMail} />
+          <section className="p-1">
+            <div className="mb-5 mt-2">
+              <h1 className="sm:text-xl text-lg font-medium bg-blue-50 p-2 mb-2 rounded-md">
+                {mail.subject}
+              </h1>
+              <div className="flex gap-2">
+                <div className="size-12 rounded-full shrink-0">
+                  {mail.type === "received" && mail.fromPhoto ? (
+                    <img
+                      className="rounded-full size-full"
+                      src={mail.fromPhoto}
+                      alt="Profile picture"
+                    />
+                  ) : (
+                    <MdAccountCircle className="size-full text-slate-500 rounded-full border border-slate-600" />
+                  )}
+                </div>
+                <div>
+                  <b>
+                    {mail.type === "received"
+                      ? mail.fromName
+                        ? mail.fromName
+                        : mail.from
+                      : mail.to}
+                  </b>
+                  <span className="block text-sm text-slate-700">
+                    {mail.type === "received"
+                      ? `From: ${mail.from}`
+                      : `To: ${mail.to}`}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div dangerouslySetInnerHTML={{ __html: mail.content }}></div>
+          </section>
+        </>
+      ) : (
+        <MailNotFound />
+      )}
     </div>
   );
 }

@@ -1,17 +1,16 @@
 import { useEffect, useRef } from "react";
-import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import { useSelector, useDispatch } from "react-redux";
 
 import { toggleSpinner } from "../../reducers/uiSlice";
 import Spinner from "../ui/Spinner";
+import { apiKey, apiUrl } from "../../utils/constants";
+import { onLogin } from "../../reducers/authSlice";
 
 export default function SignUpForm() {
   const emailRef = useRef();
   const passwordRef = useRef();
   const confirmPasswordRef = useRef();
-
-  const navigate = useNavigate();
 
   const spinner = useSelector((state) => state.ui.spinner);
   const dispatch = useDispatch();
@@ -35,23 +34,20 @@ export default function SignUpForm() {
 
     dispatch(toggleSpinner(true));
     try {
-      const response = await fetch(
-        "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBwgAJkZjV9L9mIKI7CySOf8mrvtrZ3rOQ",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            email: email,
-            password: password,
-            returnSecureToken: true,
-          }),
-        }
-      );
+      const response = await fetch(`${apiUrl}signUp?key=${apiKey}`, {
+        method: "POST",
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          returnSecureToken: true,
+        }),
+      });
+
+      const data = await response.json();
 
       if (response.ok) {
-        toast.success("Your account is created successfully. Login here");
-        navigate("/login");
+        dispatch(onLogin(data));
       } else {
-        const data = await response.json();
         throw new Error(data.error.message);
       }
     } catch (error) {

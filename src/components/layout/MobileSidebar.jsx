@@ -1,16 +1,7 @@
 import { NavLink } from "react-router";
-
 import { IoClose } from "react-icons/io5";
 
-const navLinkClass = ({ isActive }) => {
-  return `block px-2 py-2 rounded-r-2xl border-l-4 transition-colors ${
-    isActive
-      ? "bg-blue-100 font-semibold border-l-blue-500"
-      : "hover:bg-blue-100"
-  }`;
-};
-
-const links = ["Inbox", "Sent", "Stared"];
+import { links, navLinkClass } from "../../utils/constants";
 
 export default function MobileSidebar({
   unreadMails,
@@ -34,20 +25,22 @@ export default function MobileSidebar({
       >
         <div className="flex justify-between items-center">
           <h1 className="font-semibold text-2xl text-gray-800">MailNest</h1>
-          <button className="hover:text-blue-500" onClick={hideSideBar}>
+          <button
+            className="hover:text-blue-500 transition-colors"
+            onClick={hideSideBar}
+          >
             <IoClose className="size-6" />
           </button>
         </div>
-        <div className="py-10">
+        <div className="py-6">
           <ul className="rounded space-y-4">
             {links.map((link, index) => (
               <li key={index} onClick={hideSideBar}>
-                <NavLink className={navLinkClass} to={link.toLocaleLowerCase()}>
-                  {link}
-                  {link === "Inbox" && unreadMails > 0 && (
-                    <span className="float-end mr-4 font-bold">
-                      +{unreadMails}
-                    </span>
+                <NavLink className={navLinkClass} to={link.name.toLowerCase()}>
+                  <link.icon className="size-5" />{" "}
+                  <span className="flex-1">{link.name}</span>
+                  {link.name === "Inbox" && unreadMails > 0 && (
+                    <span className="mr-4 font-bold">+{unreadMails}</span>
                   )}
                 </NavLink>
               </li>

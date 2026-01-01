@@ -1,14 +1,6 @@
 import { NavLink } from "react-router";
 
-const navLinkClass = ({ isActive }) => {
-  return `block px-2 py-2 rounded-r-2xl border-l-4 transition-colors ${
-    isActive
-      ? "bg-blue-100 font-semibold border-l-blue-500"
-      : "hover:bg-blue-100"
-  }`;
-};
-
-const links = ["Inbox", "Sent", "Stared"];
+import { links, navLinkClass } from "../../utils/constants";
 
 export default function Sidebar({ unreadMails }) {
   return (
@@ -16,10 +8,11 @@ export default function Sidebar({ unreadMails }) {
       <ul className="rounded space-y-4">
         {links.map((link, index) => (
           <li key={index}>
-            <NavLink className={navLinkClass} to={link.toLocaleLowerCase()}>
-              {link}
-              {link === "Inbox" && unreadMails > 0 && (
-                <span className="float-end mr-4 font-bold">+{unreadMails}</span>
+            <NavLink className={navLinkClass} to={link.name.toLowerCase()}>
+              <link.icon className="size-5" />{" "}
+              <span className="flex-1">{link.name}</span>
+              {link.name === "Inbox" && unreadMails > 0 && (
+                <span className="mr-4 font-bold">+{unreadMails}</span>
               )}
             </NavLink>
           </li>

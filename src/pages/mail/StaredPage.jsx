@@ -1,5 +1,9 @@
-import EmptyTab from "../../components/ui/EmptyTab";
+import { useSelector } from "react-redux";
+
+import MailListCard from "../../components/mail/MailListCard";
 
 export default function StaredPage() {
-  return <EmptyTab tab="Stared" />;
+  const { staredMails } = useSelector((state) => state.email);
+
+  return <MailListCard mails={staredMails} tab="Stared" />;
 }

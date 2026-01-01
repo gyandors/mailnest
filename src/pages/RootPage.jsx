@@ -1,30 +1,42 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet } from "react-router";
-import { useSelector } from "react-redux";
 import { MdOutlineCreate } from "react-icons/md";
+import { useSelector, useDispatch } from "react-redux";
 
-import { useFetch } from "../hooks/useFetch";
-import Header from "../components/Layout/Header";
+import Header from "../components/layout/Header";
 import ComposeMail from "../components/mail/ComposeMail";
+import { dbUrl } from "../utils/constants";
+import { setMails } from "../reducers/emailSlice";
+import { toast } from "react-toastify";
+import { toggleMailsLoading } from "../reducers/uiSlice";
 
 export default function RootPage() {
+  const [showComposeMail, setShowComposeMail] = useState(false);
   const { email } = useSelector((state) => state.auth.loggedUser);
 
-  const [showComposeMail, setShowComposeMail] = useState(false);
+  const dispatch = useDispatch();
 
-  useFetch(
-    `https://mail-box-c1237-default-rtdb.firebaseio.com/${email.replace(
-      ".",
-      ""
-    )}/receivedMails.json`
-  );
+  useEffect(() => {
+    async function fetchMails() {
+      dispatch(toggleMailsLoading(true));
 
-  useFetch(
-    `https://mail-box-c1237-default-rtdb.firebaseio.com/${email.replace(
-      ".",
-      ""
-    )}/sentMails.json`
-  );
+      try {
+        const response = await fetch(`${dbUrl}/${email.replace(".", "")}.json`);
+
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.error);
+
+        dispatch(setMails(data));
+      } catch (error) {
+        toast.error(error.message);
+      }
+
+      dispatch(toggleMailsLoading(false));
+    }
+
+    fetchMails();
+  }, [dispatch, email]);
 
   return (
     <main className="bg-blue-50/50 h-screen flex flex-col overflow-hidden">
@@ -33,7 +45,7 @@ export default function RootPage() {
         <Outlet />
       </section>
       <button
-        className="border rounded-full p-4 fixed bottom-12 right-12 bg-blue-400 text-white hover:bg-blue-500 transition-colors"
+        className="border rounded-full p-4 fixed bottom-12 right-2 sm:right-12 bg-blue-400 text-white hover:bg-blue-500 transition-colors"
         title="Compose"
         onClick={() => setShowComposeMail(!showComposeMail)}
       >

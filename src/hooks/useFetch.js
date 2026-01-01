@@ -1,41 +1,41 @@
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useState, useEffect } from "react";
 
-import { setSentMails, setReceivedMails } from "../reducers/emailSlice";
-
-export function useFetch(url) {
-  const dispatch = useDispatch();
+export default function useFetch(url, options) {
+  const [state, setState] = useState({
+    data: null,
+    loading: true,
+    error: null,
+  });
 
   useEffect(() => {
-    async function fetchMails() {
-      const response = await fetch(url);
+    const controller = new AbortController();
+    const signal = controller.signal;
 
-      const data = await response.json();
+    const fetchData = async () => {
+      setState({ data: null, loading: true, error: null });
 
-      let unreadMails = 0;
-      const mailArray = [];
-      for (const key in data) {
-        if (data[key].read === false) unreadMails += 1;
-        mailArray.push({ id: key, mail: data[key] });
+      try {
+        const response = await fetch(url, { ...options, signal });
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Something went wrong!");
+        }
+
+        setState({ data: result, loading: false, error: null });
+      } catch (err) {
+        setState({
+          data: null,
+          loading: false,
+          error: err.message,
+        });
       }
+    };
 
-      if (url.includes("receivedMails")) {
-        dispatch(setReceivedMails({ mailArray, unreadMails }));
-      }
-      if (url.includes("sentMails")) {
-        dispatch(setSentMails({ mailArray, initial: true }));
-      }
-    }
+    fetchData();
 
-    fetchMails();
+    return () => controller.abort();
+  }, [url, options]);
 
-    let intervalId;
-    if (url.includes("receivedMails")) {
-      intervalId = setInterval(() => {
-        fetchMails();
-      }, 5000);
-    }
-
-    return () => clearInterval(intervalId);
-  }, [dispatch, url]);
+  return state;
 }

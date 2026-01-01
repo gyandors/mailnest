@@ -1,48 +1,74 @@
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
-import { markAsRead } from "../../reducers/emailSlice";
+import { MdAccountCircle } from "react-icons/md";
 
-export default function MailList({ id, mail, label }) {
+import { markAsRead } from "../../reducers/emailSlice";
+import { dbUrl } from "../../utils/constants";
+
+export default function MailList({ id, mail }) {
   const { email } = useSelector((state) => state.auth.loggedUser);
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   async function handleMailClick() {
-    if (mail.read === false) {
+    if (mail.type === "received" && mail.read === false) {
       const response = await fetch(
-        `https://mail-box-c1237-default-rtdb.firebaseio.com/${email.replace(
-          ".",
-          ""
-        )}/receivedMails/${id}.json`,
+        `${dbUrl}/${email.replace(".", "")}/${id}.json`,
         {
-          method: "PUT",
-          body: JSON.stringify({ ...mail, read: true }),
+          method: "PATCH",
+          body: JSON.stringify({ read: true }),
         }
       );
       if (response.ok) {
         dispatch(markAsRead(id));
       }
     }
+    navigate(id);
   }
 
   return (
-    <Link
-      className={mail.read === false ? "font-semibold" : "font-normal"}
-      to={`${id}`}
-      onClick={handleMailClick}
-    >
-      <li className="px-2 py-3 border-b flex justify-between items-center gap-3 sm:gap-36 hover:bg-blue-50 transition-colors">
-        <div className="basis-32 sm:basis-52 overflow-hidden whitespace-nowrap text-ellipsis">
-          {mail.read === false && (
-            <div className="inline-block mr-2 h-2.5 w-2.5 rounded-full bg-blue-700"></div>
-          )}
-          <span className="text-slate-500 text-sm">{label}</span>{" "}
-          <span>{label === "To:" ? mail.to : mail.from}</span>
+    <li className={mail.read === false ? "font-semibold" : ""}>
+      <Link
+        className="relative px-2 py-3 grid grid-cols-5 gap-2 items-center hover:bg-blue-50 transition-colors"
+        onClick={handleMailClick}
+      >
+        {mail.read === false && (
+          <>
+            <span className="absolute top-1 right-1 size-2.5 rounded-full bg-blue-700" />
+            <span className="absolute top-1 right-1 size-2.5 rounded-full bg-blue-700 animate-ping" />
+          </>
+        )}
+        <div className="col-span-2 flex items-center gap-2">
+          <div className="size-8 rounded-full shrink-0">
+            {mail.type === "received" && mail.fromPhoto ? (
+              <img
+                className="rounded-full size-full"
+                src={mail.fromPhoto}
+                alt="Profile picture"
+              />
+            ) : (
+              <MdAccountCircle className="size-full text-slate-500 rounded-full border border-slate-600" />
+            )}
+          </div>
+          <span className="text-nowrap overflow-hidden text-ellipsis">
+            {mail.type === "received"
+              ? mail.fromName
+                ? mail.fromName
+                : mail.from
+              : mail.to}
+          </span>
         </div>
-        <span className="flex-1 text-gray-500 overflow-hidden whitespace-nowrap text-ellipsis">
+        <span className="col-span-2 text-gray-500 text-nowrap overflow-hidden text-ellipsis">
           {mail.subject}
         </span>
-      </li>
-    </Link>
+        <span className="justify-self-end text-gray-500 text-sm text-nowrap">
+          {new Date(mail.timestamp).toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "short",
+          })}
+        </span>
+      </Link>
+    </li>
   );
 }
